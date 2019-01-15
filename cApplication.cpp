@@ -238,10 +238,10 @@ void cApplication::Frame()
 	m_Graphics.Clear(black);
 
 	int layerTiles = 3 * 3;
-	SpriteData terrainSprites[8];
+	SpriteData terrainSprites[16];
 	memset(terrainSprites, 0, sizeof(SpriteData));
 
-	int width = 2;
+	int width = 4;
 
 	for (int row = 0; row < width; row++)
 	{

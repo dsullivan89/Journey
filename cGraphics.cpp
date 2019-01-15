@@ -210,7 +210,7 @@ void cGraphics::UpdateDynamicVertexBuffer(VertexPositionTexture* verts, int coun
 	//  Disable GPU access to the vertex buffer data.
 	m_Context->Map(m_DynamicVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	//  Update the vertex buffer here.
-	memcpy(mappedResource.pData, verts, sizeof(VertexPositionTexture) * 1000);
+	memcpy(mappedResource.pData, verts, sizeof(VertexPositionTexture) * count);
 	//  Reenable GPU access to the vertex buffer data.
 	m_Context->Unmap(m_DynamicVB, 0);
 }
@@ -352,6 +352,8 @@ void cGraphics::Update(float deltaTime)
 
 void cGraphics::Render(SpriteData* sd, int count)
 {
+	if (count < 1)
+		return;
 	m_CurrentVertexCount = count * 6;
 	//VertexPositionTexture* vertices = new VertexPositionTexture[m_CurrentVertexCount]; // count = vertex count.
 	float ar = (float)m_Width / (float)m_Height; // use later... maybe.
