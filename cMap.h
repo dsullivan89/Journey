@@ -1,17 +1,29 @@
 #pragma once
 
-class cLayer16x16
+enum eLayers
 {
-	unsigned m_VerticalSpacing;
-	unsigned m_HorizontalSpacing;
-	unsigned m_LayerWidth;
-	unsigned m_LayerHeight;
-	char     m_LayerInfo[16][16];
-
-public:
-	void Create(unsigned verticalSpacing, unsigned horizontalSpacing);
-
-	cLayer16x16();
-	~cLayer16x16();
+	Terrain,
+	Objects,
+	Walls
 };
 
+// This map holds a list of layers and data can be retrieved from a specified layer.
+class cMap
+{
+private:
+	char**    m_InfoLayers;
+	unsigned* m_Widths;
+	unsigned* m_Heights;
+	unsigned m_LayerCount;
+
+public:
+	void Create(int layerCount);
+	bool AddLayer(unsigned layerIndex, char* infoLayer, int width, int height);
+	void GetLayerInfo(unsigned layerIndex, char* info);
+	unsigned GetLayerWidth(unsigned layerIndex);
+	unsigned GetLayerHeight(unsigned layerIndex);
+	void Destroy();
+
+	cMap() {};
+	~cMap() {};
+};

@@ -11,6 +11,8 @@
 #include"cGraphics.h"
 #include"cTexture.h"
 
+#include"cMap.h"
+
 #define WARRIOR 0
 #define RANGER 1
 #define ROGUE 2
@@ -23,6 +25,15 @@
 - Feed all SpriteData into the renderer as an array,
 	sorted by texture used and z-order
 */
+
+enum HumanoidAnimations
+{
+	Idle = 0,
+	Dodge,
+	Run,
+	Attack,
+	Die
+};
 
 class cApplication
 {
@@ -61,9 +72,13 @@ private:
 	void Frame();
 
 	cGraphics m_Graphics;
-	cTexture m_Texture;
+	cTexture m_WallsTexture;
+	cTexture m_WarriorTexture;
+	cTexture m_TerrainTexture;
+
+	cMap m_Map;
+
 	SpriteData sprite1;
-	char m_Map[3][3];
 	int m_nToRender;
 
 	void Initialize_Game();

@@ -41,16 +41,17 @@ struct SpriteData
 	unsigned TextureID; // Pointer to texture
 	bool FlipHorizontal;// True to flip sprite horizontally (mirror)
 	bool FlipVertical; // True to flip sprite vertically
+	bool ClipPixels;
 
 	SpriteData() {};
 	SpriteData(int width, int height,
 		float x, float y, float scale, float angle,
 		DRECT rect, unsigned texID,
-		bool flipH, bool flipV, unsigned textureID, unsigned layer)
+		bool flipH, bool flipV, unsigned textureID, bool shouldClip)
 		: Width(width), Height(height), X(x), Y(y),
 		Scale(scale), Angle(angle),
 		Rect(rect), TextureID(texID),
-		FlipHorizontal(flipH), FlipVertical(flipV)
+		FlipHorizontal(flipH), FlipVertical(flipV), ClipPixels(shouldClip)
 	{};
 };
 
@@ -71,6 +72,7 @@ struct cbPerObject
 	XMMATRIX WVP;
 	XMFLOAT2 Dimensions;
 	bool HasTexture;
+	bool ShouldClip;
 	XMFLOAT4 Color;
 };
 
@@ -85,6 +87,10 @@ private:
 	ID3D11DeviceContext* m_Context;
 	IDXGISwapChain* m_SwapChain;
 	ID3D11RenderTargetView* m_RenderTargetView;
+
+	// Rasterizer States.
+	ID3D11RasterizerState* m_RSWireFrame;
+	ID3D11RasterizerState* m_RSSolid;
 
 	unsigned m_CurrentVertexCount;
 	ID3D11Buffer* m_DynamicVB;
@@ -132,6 +138,9 @@ public:
 	void Render(SpriteData* sd, const int count);
 	void Present();
 	void Shutdown();
+
+	void RSWireFrameMode() { m_Context->RSSetState(m_RSWireFrame); }
+	void RSSolidMode() { m_Context->RSSetState(nullptr); }
 
 	void OnResize(int newWidth, int newHeight);
 };

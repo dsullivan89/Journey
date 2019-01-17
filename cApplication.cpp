@@ -198,8 +198,11 @@ void cApplication::OnKeyDown(int vkCode)
 	{
 		sprite1.X -= 5;
 		DRECT rect = sprite1.Rect;
+		rect.top = (float)HumanoidAnimations::Run/10;
+		rect.bottom = rect.top + 0.1;
 		rect.right += 0.1;
 		rect.left += 0.1;
+		
 		sprite1.Rect = rect;
 		sprite1.FlipHorizontal = true;
 	}
@@ -208,19 +211,22 @@ void cApplication::OnKeyDown(int vkCode)
 	{
 		sprite1.X += 5;
 		DRECT rect = sprite1.Rect;
+		rect.top = (float)HumanoidAnimations::Run/10;
+		rect.bottom = rect.top + 0.1;
 		rect.right += 0.1;
 		rect.left += 0.1;
+
 		sprite1.Rect = rect;
 		sprite1.FlipHorizontal = false;
 	}
 
-	if (vkCode == VK_UP)
+	if (vkCode == 0x31)
 	{
-		m_nToRender++;
+		m_Graphics.RSSolidMode();
 	}
-	if (vkCode == VK_DOWN)
+	if (vkCode == 0x32)
 	{
-		m_nToRender--;
+		m_Graphics.RSWireFrameMode();
 	}
 		
 }
@@ -235,46 +241,57 @@ void cApplication::Frame()
 	float white[4] = { 1.0f, 1.0f, 1.0f, 0.0f };
 	float black[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
+	int _width = m_Map.GetLayerWidth(0);
+	int _height = m_Map.GetLayerHeight(0);
+	int _area = _width * _height;
+	char* _info = nullptr;
+	m_Map.GetLayerInfo(0, _info);
+
 	m_Graphics.Clear(black);
 
 	int layerTiles = 3 * 3;
-	SpriteData terrainSprites[16];
+	
+	SpriteData terrainSprites[256];
 	memset(terrainSprites, 0, sizeof(SpriteData));
 
-	int width = 4;
+	int width = 16;
 
+	// preparing terrain
 	for (int row = 0; row < width; row++)
 	{
 		for (int column = 0; column < width; column++)
 		{
 			int i = row*width+column;
 
-			float ScreenX = float(row * 32);
-			float ScreenY = float(column * 32);
+			float ScreenX = float(row * 128) - float(16*128/2);
+			float ScreenY = float(column * 128) - float(16*128/2);
 			DRECT rect;
-			rect.top = 0.0;
-			rect.bottom = 0.1;
-			rect.right = 0.1;
-			rect.left = 0.0;
+			rect.top = 0.0f;
+			rect.left = 0.0f;
+			rect.bottom = 0.5;
+			rect.right = 0.5;
 
 			terrainSprites[i].X = ScreenX; //  -(m_WindowWidth / 2);
 			terrainSprites[i].Y = ScreenY; // -(m_WindowHeight / 2);
-			terrainSprites[i].Width = 32;
-			terrainSprites[i].Height = 32;
+			terrainSprites[i].Width = 128;
+			terrainSprites[i].Height = 128;
 			terrainSprites[i].Rect = rect;
 			terrainSprites[i].FlipHorizontal = false;
 			terrainSprites[i].FlipVertical = false;		
+			terrainSprites[i].ClipPixels = false;
 			i++;
 		}
-		m_Graphics.Render(terrainSprites, m_nToRender);
 	}
 
-	//sprite1.X = 0;
-	//sprite1.Y = 0;
-	sprite1.Width = 64;
-	sprite1.Height = 64;
+	// rendering terrain
+	m_TerrainTexture.Set();
+	m_Graphics.Render(terrainSprites, width*width);
 
+
+	// rendering objects.
+	m_WarriorTexture.Set();
 	// m_Graphics.Update(0.0);
+	sprite1.ClipPixels = false;
 	m_Graphics.Render(&sprite1, 1);
 	m_Graphics.Present();
 }
@@ -282,26 +299,68 @@ void cApplication::Frame()
 void cApplication::Initialize_Game()
 {
 	bool result;
-	result = m_Texture.Load(m_Graphics, L"Textures/Warrior_Spritesheet.png");
+	result = m_WarriorTexture.Load(m_Graphics, L"Textures/Warrior_Spritesheet.png");
+
+	if (!result)
+		MessageBox(m_hWnd, "Texture failed to load.", "cTexture::Load()", MB_OK);
+
+	result = m_TerrainTexture.Load(m_Graphics, L"Textures/terrainTiles.png");
 	
-	if (result)
-		m_Texture.Set();
-	else
+	if (!result)
+		MessageBox(m_hWnd, "Texture failed to load.", "cTexture::Load()", MB_OK);
+
+	result = m_WallsTexture.Load(m_Graphics, L"Textures/perspective_walls.png");
+
+	if (!result)
 		MessageBox(m_hWnd, "Texture failed to load.", "cTexture::Load()", MB_OK);
 
 	int layerTiles = 3 * 3;
 	SpriteData terrainSprites[3 * 3];
 
-	for (int row = 0; row < 3; row++)
-	{
-		for (int column = 0; column < 3; column++)
-		{
-			m_Map[row][column] = 1;
-		}
-	}
+	char layer0Info[256] =	  {  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+								 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+							   };
 
-	sprite1.Width = 200;// m_Texture.GetWidth() / 10;
-	sprite1.Height = 200;// m_Texture.GetHeight() / 10;
+	char layer1Info[256] =    {  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 5, 1, 6, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 8,14, 7, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+								 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							   };
+
+	// Map and it's Layers	//	//	//
+	m_Map.Create(2);
+	m_Map.AddLayer(0, layer0Info, 16, 16);
+	m_Map.AddLayer(1, layer1Info, 16, 16);
+	//	//	//	//	//	//	//	//	//
+
+	sprite1.Width = 128;// m_Texture.GetWidth() / 10;
+	sprite1.Height = 128;// m_Texture.GetHeight() / 10;
 	sprite1.X = 0;
 	sprite1.Y = 0;
 	sprite1.FlipHorizontal = false;
@@ -316,12 +375,15 @@ void cApplication::Initialize_Game()
 	sprite1.Rect = rect;
 
 	// debugging:
-	m_nToRender = 1;
+	m_nToRender = 16;
 }
 
 void cApplication::Shutdown_Game()
 {
-	m_Texture.Free();
+	m_WarriorTexture.Free();
+	m_TerrainTexture.Free();
+	m_WallsTexture.Free();
+	m_Map.Destroy();
 }
 
 LRESULT CALLBACK cApplication::WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)

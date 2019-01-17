@@ -119,6 +119,7 @@ bool cGraphics::InitializeConstantBuffer()
 	obj.Dimensions = { 1.0f, 1.0f };
 	obj.WVP = XMMatrixIdentity();
 	obj.HasTexture = false;
+	obj.ShouldClip = false;
 	obj.Color = { 1.0f, 0.0f, 0.0f, 1.0f };
 
 	HRESULT hr;
@@ -176,14 +177,14 @@ bool cGraphics::InitializeDynamicVertexBuffer()
 {
 	HRESULT hr;
 
-	VertexPositionTexture vertices[1000];
+	VertexPositionTexture vertices[2000];
 
 	m_CurrentVertexCount = 6;
 
 	// Fill in a buffer description.
 	D3D11_BUFFER_DESC bufferDesc;
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	bufferDesc.ByteWidth = sizeof(VertexPositionTexture) * 1000;
+	bufferDesc.ByteWidth = sizeof(VertexPositionTexture) * 2000;
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	bufferDesc.MiscFlags = 0;
@@ -311,6 +312,23 @@ bool cGraphics::Initialize(HWND hWnd, int width, int height, bool windowed)
 	vp.TopLeftY = 0;
 	m_Context->RSSetViewports(1, &vp);
 
+	// wireframe
+	D3D11_RASTERIZER_DESC wfdesc;
+	ZeroMemory(&wfdesc, sizeof(D3D11_RASTERIZER_DESC));
+	wfdesc.FillMode = D3D11_FILL_WIREFRAME;
+	wfdesc.CullMode = D3D11_CULL_NONE;
+	hr = m_Device->CreateRasterizerState(&wfdesc, &m_RSWireFrame);
+
+	// solid
+	D3D11_RASTERIZER_DESC sdesc;
+	ZeroMemory(&wfdesc, sizeof(D3D11_RASTERIZER_DESC));
+	sdesc.FillMode = D3D11_FILL_SOLID;
+	sdesc.CullMode = D3D11_CULL_NONE;
+	
+	hr = m_Device->CreateRasterizerState(&sdesc, &m_RSSolid);
+
+	
+
 	bool result;
 	result = InitializeShaders();
 	if (!result)
@@ -355,6 +373,10 @@ void cGraphics::Render(SpriteData* sd, int count)
 	if (count < 1)
 		return;
 	m_CurrentVertexCount = count * 6;
+
+	if (m_CurrentVertexCount > 6144)
+		return;
+
 	//VertexPositionTexture* vertices = new VertexPositionTexture[m_CurrentVertexCount]; // count = vertex count.
 	float ar = (float)m_Width / (float)m_Height; // use later... maybe.
 	//int vIndex = 0; // index of the vertex array.
@@ -365,22 +387,59 @@ void cGraphics::Render(SpriteData* sd, int count)
 		// Vertex positions:
 		//		Normalized dimensions and position.
 
-		float nWidth = (float)sd[sprite_i].Width / float(m_Width / 2);     // n implies normalized to the [-1,1] range.
-		float nHeight = (float)sd[sprite_i].Height / float(m_Height / 2);
-		float nPosX = sd[sprite_i].X / float(m_Width / 2);        // position in [-1,1] range
-		float nPosY = sd[sprite_i].Y / float(m_Height / 2);
+		// rescaled = -1 + 2 * (point.Y - yMin) / (yMax - yMin);
+		float pxWidth = (float)sd[sprite_i].Width;
+		float pxHeight = (float)sd[sprite_i].Height;
+		// sets origin to the Upper Left of the window.
+		//float nX = 2.0f*(float)x / m_Width - 1.0f;
+		//float nY = 1.0f - 2.0f*(float)y / m_Height;
+		
+		// I need to convert these values to a range between [-1,1] before drawing.
+		// The math for nWidth, nHeight appears to be wrong.
+		// The positions are probably okay, as after a few sprites a grid starts to form.
 
-		float Ax = nPosX - (nWidth / 2);
-		float Ay = nPosY + (nHeight / 2);
+		// (x - MIN) / (MAX - MIN)
 
-		float Bx = nPosX + (nWidth / 2);
-		float By = nPosY + (nHeight / 2);
+		float x = sd[sprite_i].X;
+		float y = sd[sprite_i].Y;
+		float width = (float)sd[sprite_i].Width;
+		float height = (float)sd[sprite_i].Height;
+		float maxX = (float)m_Width;
+		float maxY = (float)m_Height;
 
-		float Cx = nPosX - (nWidth / 2);
-		float Cy = nPosY - (nHeight / 2);
+		
+		
+		float nWidth = width / (maxX * 2);// -1.0f;     // n implies normalized to the [-1,1] range.
+		float nHeight = height / (maxY * 2);// -1.0f; // / float(m_Height);
+		float nPosX = x / (maxX * 2);
+		float nPosY = y / (maxY * 2);
+		float halfWidth = nWidth * 0.5f;
+		float halfHeight = nHeight * 0.5f;
 
-		float Dx = nPosX + (nWidth / 2);
-		float Dy = nPosY - (nHeight / 2);
+		// Vertices
+		/*   
+			 A-----B
+			 |    /|
+			 |	 / |
+		     |  /  |
+		     | /   |
+			 |/    |
+			 C-----D
+		*/
+
+		float Ax = nPosX - halfWidth;	// -(nWidth / 2);// -halfWidth;
+		float Ay = nPosY + halfHeight;	// +(nHeight / 2);//-halfHeight;
+
+		float Bx = nPosX + halfWidth;	// +(nWidth / 2);// - halfWidth;
+		float By = nPosY + halfHeight;	// +(nHeight / 2);// - halfHeight;
+
+		float Cx = nPosX - halfWidth;	// -(nWidth / 2);// - halfWidth;
+		float Cy = nPosY - halfHeight;	// -(nHeight / 2);// - halfHeight;
+
+		float Dx = nPosX + halfWidth;	// +(nWidth / 2);// - halfWidth;
+		float Dy = nPosY - halfHeight;	// -(nHeight / 2);// - halfHeight;
+
+		float z = 0.0f;
 
 		bool flipH = sd[sprite_i].FlipHorizontal;
 
@@ -390,7 +449,7 @@ void cGraphics::Render(SpriteData* sd, int count)
 		float y1 = (float)sd[sprite_i].Rect.top;
 		float y2 = (float)sd[sprite_i].Rect.bottom;
 
-		float z = 0.0f;
+
 
 		VertexPositionTexture vertA = { Ax, Ay, z, x1, y1 };
 		VertexPositionTexture vertB = { Bx, By, z, x2, y1 };
@@ -423,6 +482,8 @@ void cGraphics::Render(SpriteData* sd, int count)
 	SetVertexBuffer(0);
 
 	m_Context->Draw(vertList.size(), 0);
+
+	vertList.clear();
 	
 
 	//VertexPositionTexture vertices[] =
@@ -453,6 +514,10 @@ void cGraphics::Shutdown()
 		m_SwapChain->Release();
 	if (m_RenderTargetView)
 		m_RenderTargetView->Release();
+	if (m_RSWireFrame)
+		m_RSWireFrame->Release();
+	if (m_RSSolid)
+		m_RSSolid->Release();
 	if (m_DynamicVB)
 		m_DynamicVB->Release();
 	if (m_ConstantBufferPerObject)

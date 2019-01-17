@@ -15,6 +15,7 @@ cbuffer cbPerObj
 	float4x4 WVP;
 	float2 Dimensions;
 	bool HasTexture;
+	bool ShouldClip;
 	float4 Color;
 };
 
@@ -35,7 +36,8 @@ float4 main(PS_Input input) : SV_TARGET
 
 	if (HasTexture)
 	{
-		clip(diffuse.a - 0.25);
+		if(ShouldClip)
+			clip(diffuse.a - 0.25);
 		return diffuse;
 	}
 	else
