@@ -14,7 +14,6 @@ void cMap::Create(int layerCount)
 bool cMap::AddLayer(unsigned layerIndex, char * infoLayer, int width, int height)
 {
 	int area = width * height;
-	//infoLayer = new char[area];
 	m_InfoLayers[layerIndex] = new char[area];
 
 	memcpy(m_InfoLayers[layerIndex], infoLayer, area);
@@ -31,7 +30,6 @@ void cMap::GetLayerInfo(unsigned layerIndex, char * info)
 	int height = m_Heights[layerIndex];
 	int area = width * height;
 
-	info = new char[area];
 	memcpy(info, m_InfoLayers[layerIndex], area);
 
 	return;
