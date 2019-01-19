@@ -9,7 +9,7 @@
 #include<windowsx.h>
 
 #include"cGraphics.h"
-#include"cTexture.h"
+#include"cTiles.h"
 
 #include"cMap.h"
 
@@ -72,9 +72,10 @@ private:
 	void Frame();
 
 	cGraphics m_Graphics;
-	cTexture m_WallsTexture;
-	cTexture m_WarriorTexture;
-	cTexture m_TerrainTexture;
+	cTiles m_Tiles;
+	//cTexture m_WallsTexture;
+	//cTexture m_WarriorTexture;
+	//cTexture m_TerrainTexture;
 
 	cMap m_Map;
 

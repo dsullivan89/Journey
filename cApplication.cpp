@@ -1,40 +1,6 @@
 #include "cApplication.h"
 
-char layer0Info[256] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-								 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-								 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-};
 
-char layer1Info[256] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 5, 1, 6, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 8,14, 7, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-};
 
 
 bool cApplication::Initialize(HINSTANCE hInstance, int ShowWnd, int width, int height, bool windowed)
@@ -276,59 +242,86 @@ void cApplication::Frame()
 	float white[4] = { 1.0f, 1.0f, 1.0f, 0.0f };
 	float black[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-	int _width = m_Map.GetLayerWidth(0);
-	int _height = m_Map.GetLayerHeight(0);
-	int _area = _width * _height;
-	char* _info = new char[_area];
-
-	m_Map.GetLayerInfo(0, _info);
-
-	delete[] _info;
-
 	m_Graphics.Clear(black);
 
-	int layerTiles = 3 * 3;
-	
-	SpriteData terrainSprites[256];
-	memset(terrainSprites, 0, sizeof(SpriteData));
-
-	int width = 16;
-
-	// preparing terrain
-	for (int row = 0; row < width; row++)
+	// rendering terrain
+	int _layers = m_Map.GetLayerCount();
+	for (int layer = 0; layer < 1; layer++)
 	{
-		for (int column = 0; column < width; column++)
+		int _mapWidth = m_Map.GetLayerWidth(layer);
+		int _mapHeight = m_Map.GetLayerHeight(layer);
+		int _area = _mapWidth * _mapHeight;
+		int _tileWidth = m_Tiles.GetWidth(layer);
+		int _tileHeight = m_Tiles.GetHeight(layer);
+		int _emptySpaces = m_Map.GetEmptySpacesInLayer(layer);
+		char* _layerInfo = new char[_area];
+		SpriteData* terrainSprites = new SpriteData[_area];
+		memset(terrainSprites, 0, sizeof(SpriteData)*_area);
+		m_Map.GetLayerInfo(layer, _layerInfo);
+
+		for (int row = 0; row < _mapWidth; row++)
 		{
-			int i = row*width+column;
+			for (int column = 0; column < _mapHeight; column++)
+			{
+				int i = row * _mapWidth + column;
 
-			float ScreenX = float(row * 128) - float(16*128/2);
-			float ScreenY = float(column * 128) - float(16*128/2);
-			DRECT rect;
-			rect.top = 0.0f;
-			rect.left = 0.0f;
-			rect.bottom = 0.5;
-			rect.right = 0.5;
+				DRECT rect = m_Tiles.GetTile(layer, _layerInfo[i]);
 
-			terrainSprites[i].X = ScreenX; //  -(m_WindowWidth / 2);
-			terrainSprites[i].Y = ScreenY; // -(m_WindowHeight / 2);
-			terrainSprites[i].Width = 128;
-			terrainSprites[i].Height = 128;
-			terrainSprites[i].Rect = rect;
-			terrainSprites[i].FlipHorizontal = false;
-			terrainSprites[i].FlipVertical = false;		
-			terrainSprites[i].ClipPixels = false;
-			i++;
+				float ScreenX = float(row * _tileWidth) - float(_tileWidth * _mapWidth / 2);
+				float ScreenY = float(column * _tileHeight) - float(_tileHeight * _mapWidth / 2);
+
+				terrainSprites[i].X = ScreenX;
+				terrainSprites[i].Y = ScreenY;
+				terrainSprites[i].Width = _tileWidth;
+				terrainSprites[i].Height = _tileHeight;
+				terrainSprites[i].Rect = rect;
+				terrainSprites[i].FlipHorizontal = false;
+				terrainSprites[i].FlipVertical = false;
+				terrainSprites[i].ClipPixels = false;
+				i++;
+			}
 		}
+
+		// tell the graphics system about the tiles we want and our sprite data.
+		m_Tiles.SetTileset(layer);
+		m_Graphics.Render(terrainSprites, _area);
+
+		// we are done rendering terrain, free this memory.
+		delete[] _layerInfo;
+		delete[] terrainSprites;
 	}
 
-	// rendering terrain
-	m_TerrainTexture.Set();
-	m_Graphics.Render(terrainSprites, width*width);
+	//// preparing terrain
+	//for (int row = 0; row < width; row++)
+	//{
+	//	for (int column = 0; column < width; column++)
+	//	{
+	//		int i = row*width+column;
+
+	//		float ScreenX = float(row * 128) - float(16*128/2);
+	//		float ScreenY = float(column * 128) - float(16*128/2);
+	//		DRECT rect;
+	//		rect.top = 0.0f;
+	//		rect.left = 0.0f;
+	//		rect.bottom = 0.5;
+	//		rect.right = 0.5;
+
+	//		terrainSprites[i].X = ScreenX; //  -(m_WindowWidth / 2);
+	//		terrainSprites[i].Y = ScreenY; // -(m_WindowHeight / 2);
+	//		terrainSprites[i].Width = 128;
+	//		terrainSprites[i].Height = 128;
+	//		terrainSprites[i].Rect = rect;
+	//		terrainSprites[i].FlipHorizontal = false;
+	//		terrainSprites[i].FlipVertical = false;		
+	//		terrainSprites[i].ClipPixels = false;
+	//		i++;
+	//	}
+	//}
 
 
 	// rendering objects.
-	m_WarriorTexture.Set();
 	// m_Graphics.Update(0.0);
+	m_Tiles.SetTileset(2);
 	sprite1.ClipPixels = false;
 	m_Graphics.Render(&sprite1, 1);
 	m_Graphics.Present();
@@ -336,26 +329,50 @@ void cApplication::Frame()
 
 void cApplication::Initialize_Game()
 {
-	bool result;
-	result = m_WarriorTexture.Load(m_Graphics, L"Textures/Warrior_Spritesheet.png");
+	m_Tiles.Create(&m_Graphics, 3);
 
-	if (!result)
-		MessageBox(m_hWnd, "Texture failed to load.", "cTexture::Load()", MB_OK);
-
-	result = m_TerrainTexture.Load(m_Graphics, L"Textures/terrainTiles.png");
-	
-	if (!result)
-		MessageBox(m_hWnd, "Texture failed to load.", "cTexture::Load()", MB_OK);
-
-	result = m_WallsTexture.Load(m_Graphics, L"Textures/perspective_walls.png");
-
-	if (!result)
-		MessageBox(m_hWnd, "Texture failed to load.", "cTexture::Load()", MB_OK);
+	m_Tiles.Load(0, L"Textures/terrainTiles.png", 32, 32);
+	m_Tiles.Load(1, L"Textures/perspective_walls.png", 16, 16);
+	m_Tiles.Load(2, L"Textures/Warrior_Spritesheet.png", 32, 32);
 
 	int layerTiles = 3 * 3;
 	SpriteData terrainSprites[3 * 3];
 
-	
+	char layer0Info[256] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+							 1,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+							 1,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+							 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
+							 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
+							 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
+							 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
+							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+							 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	};
+
+	char layer1Info[256] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1, 5, 1, 6,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1, 2, 0, 2,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1, 2, 0, 2,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1, 8,14, 7,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	};
 
 	// Map and it's Layers	//	//	//
 	m_Map.Create(2);
@@ -384,9 +401,7 @@ void cApplication::Initialize_Game()
 
 void cApplication::Shutdown_Game()
 {
-	m_WarriorTexture.Free();
-	m_TerrainTexture.Free();
-	m_WallsTexture.Free();
+	m_Tiles.Destroy();
 	m_Map.Destroy();
 }
 

@@ -13,7 +13,8 @@ struct sTileInfo
 class cTiles
 {
 private:
-	long m_NumTextures; // # of textures
+	cGraphics* m_Graphics;
+	long m_TextureCount; // # of textures
 	cTexture *m_Textures; // cTexture array
 	short *m_Widths; // Tile widths array
 	short *m_Heights; // Tile heights array
@@ -22,17 +23,18 @@ public:
 	cTiles();
 	~cTiles();
 	// Functions to create and free the tile interface
-	bool Create(long NumTextures);
-	bool Free();
+	bool Create(cGraphics* graphics, long NumTextures);
+	bool Destroy();
 	// Functions to load and free a single texture
-	BOOL Load(long TextureNum, char *Filename,
+	bool Load(long textureIndex, std::wstring fileName,
 		short TileWidth = 0, short TileHeight = 0);
+	void SetTileset(int tileIndex);
 	// free an individual texture.
-	BOOL Free(long TextureNum = -1);
+	bool Free(long textureIndex = -1);
 	// Functions to retrieve tile dimensions and
 	// # of tiles in a texture.
-	long GetWidth(long TextureNum);
-	long GetHeight(long TextureNum);
-	long GetNum(long TextureNum);
+	int GetWidth(long textureIndex);
+	int GetHeight(long textureIndex);
+	DRECT GetTile(int textureIndex, int tileIndex);
 	// Draw a single tile to location
 };

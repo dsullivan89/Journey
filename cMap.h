@@ -22,6 +22,8 @@ public:
 	void GetLayerInfo(unsigned layerIndex, char* info);
 	unsigned GetLayerWidth(unsigned layerIndex);
 	unsigned GetLayerHeight(unsigned layerIndex);
+	unsigned GetLayerCount() { return m_LayerCount; }
+	unsigned GetEmptySpacesInLayer(unsigned layerIndex);
 	void Destroy();
 
 	cMap() {};

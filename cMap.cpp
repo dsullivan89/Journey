@@ -45,6 +45,18 @@ unsigned cMap::GetLayerHeight(unsigned layerIndex)
 	return m_Heights[layerIndex];
 }
 
+unsigned cMap::GetEmptySpacesInLayer(unsigned layerIndex)
+{
+	unsigned emptySpaceCount = 0;
+	int area = m_Widths[layerIndex] * m_Heights[layerIndex];
+
+	for (int i = 0; i < area; i++)
+		if (m_InfoLayers[layerIndex][i] == -1)
+			emptySpaceCount++;
+
+	return emptySpaceCount;
+}
+
 void cMap::Destroy()
 {
 	for (unsigned i = 0; i < m_LayerCount; i++)
