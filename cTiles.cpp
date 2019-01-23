@@ -17,6 +17,8 @@ bool cTiles::Create(cGraphics* graphics, long textureCount)
 	m_Widths = new short[textureCount];
 	m_Heights = new short[textureCount];
 	m_Columns = new short[textureCount];
+	m_ScaleX = new float[textureCount];
+	m_ScaleY = new float[textureCount];
 
 	return false;
 }
@@ -30,6 +32,8 @@ bool cTiles::Destroy()
 	delete[] m_Widths;
 	delete[] m_Heights;
 	delete[] m_Columns;
+	delete[] m_ScaleX;
+	delete[] m_ScaleY;
 
 	return false;
 }
@@ -40,6 +44,9 @@ bool cTiles::Load(long textureIndex, std::wstring fileName, short TileWidth, sho
 	m_Widths[textureIndex] = TileWidth;
 	m_Heights[textureIndex] = TileHeight;
 	m_Columns[textureIndex] = m_Textures[textureIndex].GetWidth() / TileWidth;
+	m_ScaleX[textureIndex] = 1;
+	m_ScaleY[textureIndex] = 1;
+
 
 	return true;
 }
@@ -60,14 +67,24 @@ bool cTiles::Free(long textureIndex)
 	return 1;
 }
 
+void cTiles::SetScaleX(long textureIndex, float scaleX)
+{
+	m_ScaleX[textureIndex] = scaleX;
+}
+
+void cTiles::SetScaleY(long textureIndex, float scaleY)
+{
+	m_ScaleY[textureIndex] = scaleY;
+}
+
 int cTiles::GetWidth(long textureIndex)
 {
-	return m_Textures[textureIndex].GetWidth();
+	return m_Widths[textureIndex];
 }
 
 int cTiles::GetHeight(long textureIndex)
 {
-	return m_Textures->GetHeight();
+	return m_Heights[textureIndex];
 }
 
 DRECT cTiles::GetTile(int textureIndex, int tileIndex)
@@ -79,7 +96,7 @@ DRECT cTiles::GetTile(int textureIndex, int tileIndex)
 	float tileWidth = (float)m_Widths[textureIndex];
 	float tileHeight = (float)m_Heights[textureIndex];
 	int columns = m_Columns[textureIndex];
-	int rows = texHeight / tileHeight;
+	//int rows = texHeight / tileHeight;
 
 	rect.top = ((tileIndex / columns) * tileHeight) / texHeight;
 	rect.left = ((tileIndex % columns) * tileWidth) / texWidth;

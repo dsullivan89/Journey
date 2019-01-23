@@ -1,6 +1,22 @@
 #include "cApplication.h"
 
-
+BOOL IsMouseTouchingTile(
+	long TileX, long TileY, // tile coordinates
+	long TileWidth, long TileHeight, // tile dimensions
+	long MouseX, long MouseY) // mouse coordinates
+{
+	// check if mouse too far left from tile
+	if (MouseX < TileX) return FALSE;
+	// check if mouse too far right from tile
+	if (MouseX >= TileX + TileWidth) return FALSE;
+	// check if mouse too far above tile
+	if (MouseY < TileY) return FALSE;
+	// check if mouse too far below tile
+	if (MouseY >= TileY + TileHeight) return FALSE;
+	// mouse must be touching tile
+	return TRUE; // return success
+}
+float g_Scale = 1;
 
 
 bool cApplication::Initialize(HINSTANCE hInstance, int ShowWnd, int width, int height, bool windowed)
@@ -229,6 +245,13 @@ void cApplication::OnKeyDown(int vkCode)
 	{
 		m_Graphics.RSWireFrameMode();
 	}
+
+	float scale = 0.1;
+
+	if (vkCode == VK_UP)
+		g_Scale += scale;
+	if (vkCode == VK_DOWN)
+		g_Scale -= scale;
 		
 }
 
@@ -244,16 +267,40 @@ void cApplication::Frame()
 
 	m_Graphics.Clear(black);
 
+	
+
 	// rendering terrain
 	int _layers = m_Map.GetLayerCount();
-	for (int layer = 0; layer < 1; layer++)
+	for (int layer = 0; layer < _layers; layer++)
 	{
+		float _maxMapWidth = m_Map.GetLayerWidth(0) * m_Tiles.GetWidth(0);
+		float _maxMapHeight = m_Map.GetLayerHeight(0) * m_Tiles.GetHeight(0);
+
 		int _mapWidth = m_Map.GetLayerWidth(layer);
 		int _mapHeight = m_Map.GetLayerHeight(layer);
 		int _area = _mapWidth * _mapHeight;
+
+		int xInterval = m_Tiles.GetWidth(0);
+		int yInterval = m_Tiles.GetHeight(0);
+		float xScale = m_Tiles.GetScaleX(0);
+		float yScale = m_Tiles.GetScaleY(0);
+		float adjXInt = xInterval * xScale;
+		float adjYInt = yInterval * yScale;
+
+		float fineMapHeight = m_Map.GetLayerHeight(0) * m_Tiles.GetHeight(0) * m_Tiles.GetScaleY(0);
+
 		int _tileWidth = m_Tiles.GetWidth(layer);
 		int _tileHeight = m_Tiles.GetHeight(layer);
-		int _emptySpaces = m_Map.GetEmptySpacesInLayer(layer);
+		float _tileScaleX = m_Tiles.GetScaleX(layer);
+		float _tileScaleY = m_Tiles.GetScaleY(layer);
+		float _nWidth = _tileWidth * _tileScaleX;
+		float _nHeight = _tileHeight * _tileScaleY;
+		int _emptySpaces = 0;
+		int fineX = (_tileWidth*_tileScaleX) * _mapWidth;
+		int fineY = (_tileHeight*_tileScaleY) * _mapHeight;
+		//float xOffset = fineX % _tileWidth;
+		//float yOffset = fineY % _tileHeight;
+
 		char* _layerInfo = new char[_area];
 		SpriteData* terrainSprites = new SpriteData[_area];
 		memset(terrainSprites, 0, sizeof(SpriteData)*_area);
@@ -265,20 +312,37 @@ void cApplication::Frame()
 			{
 				int i = row * _mapWidth + column;
 
-				DRECT rect = m_Tiles.GetTile(layer, _layerInfo[i]);
+				if (_layerInfo[i] != -1)
+				{
+					// Smooth scrolling goes here.
+					DRECT rect = m_Tiles.GetTile(layer, _layerInfo[i]);
 
-				float ScreenX = float(row * _tileWidth) - float(_tileWidth * _mapWidth / 2);
-				float ScreenY = float(column * _tileHeight) - float(_tileHeight * _mapWidth / 2);
+					// this is the width and height of the map layer
+					// measured in pixels.
 
-				terrainSprites[i].X = ScreenX;
-				terrainSprites[i].Y = ScreenY;
-				terrainSprites[i].Width = _tileWidth;
-				terrainSprites[i].Height = _tileHeight;
-				terrainSprites[i].Rect = rect;
-				terrainSprites[i].FlipHorizontal = false;
-				terrainSprites[i].FlipVertical = false;
-				terrainSprites[i].ClipPixels = false;
-				i++;
+					
+					float ScreenX = (row - column) * (adjXInt / 2);
+					float ScreenY = (row + column) * (adjYInt / 2) - (fineMapHeight / 2);
+
+					// debugging
+					//float ScreenX = (layer == 1) ? (column - row) * (adjXInt / 2) * g_Scale : (row - column) * (adjXInt / 2);
+					//float ScreenY = (layer == 1) ? (column + row) * (adjYInt / 2) * g_Scale - (fineMapHeight / 2) : (row + column) * (adjYInt / 2) - (fineMapHeight / 2);
+
+					//float ScreenX = (row * (_tileWidth*_tileScaleX / 2)) - (column * (_tileWidth*_tileScaleX / 2));// -fineX / 2;
+					//float ScreenY = (row * (_tileHeight*_tileScaleY / 2)) + (column * (_tileHeight*_tileScaleY / 2))-fineY / 2;
+
+					//float ScreenX = float(row * (_tileWidth*_tileScaleX)) - float(fineX*_tileScaleX / 2);
+					//float ScreenY = float(column * (_tileHeight*_tileScaleY)) - float(fineY*_tileScaleY / 2);
+					
+					terrainSprites[i].X = ScreenX;
+					terrainSprites[i].Y = ScreenY;
+					terrainSprites[i].Width = _tileWidth *_tileScaleX;
+					terrainSprites[i].Height = _tileHeight *_tileScaleY;
+					terrainSprites[i].Rect = rect;
+					terrainSprites[i].FlipHorizontal = false;
+					terrainSprites[i].FlipVertical = false;
+					terrainSprites[i].ClipPixels = false;
+				}
 			}
 		}
 
@@ -291,37 +355,19 @@ void cApplication::Frame()
 		delete[] terrainSprites;
 	}
 
-	//// preparing terrain
-	//for (int row = 0; row < width; row++)
-	//{
-	//	for (int column = 0; column < width; column++)
-	//	{
-	//		int i = row*width+column;
-
-	//		float ScreenX = float(row * 128) - float(16*128/2);
-	//		float ScreenY = float(column * 128) - float(16*128/2);
-	//		DRECT rect;
-	//		rect.top = 0.0f;
-	//		rect.left = 0.0f;
-	//		rect.bottom = 0.5;
-	//		rect.right = 0.5;
-
-	//		terrainSprites[i].X = ScreenX; //  -(m_WindowWidth / 2);
-	//		terrainSprites[i].Y = ScreenY; // -(m_WindowHeight / 2);
-	//		terrainSprites[i].Width = 128;
-	//		terrainSprites[i].Height = 128;
-	//		terrainSprites[i].Rect = rect;
-	//		terrainSprites[i].FlipHorizontal = false;
-	//		terrainSprites[i].FlipVertical = false;		
-	//		terrainSprites[i].ClipPixels = false;
-	//		i++;
-	//	}
-	//}
-
-
 	// rendering objects.
 	// m_Graphics.Update(0.0);
 	m_Tiles.SetTileset(2);
+	float _tileWidth = m_Tiles.GetWidth(2);
+	float _tileHeight = m_Tiles.GetHeight(2);
+	float _tileScaleX = m_Tiles.GetScaleX(2);
+	float _tileScaleY = m_Tiles.GetScaleY(2);
+	
+	float _adjTileSizeX = _tileWidth * _tileScaleX;
+	float _adjTileSizeY = _tileHeight * _tileScaleY;
+
+	sprite1.Width = _adjTileSizeX;
+	sprite1.Height = _adjTileSizeY;
 	sprite1.ClipPixels = false;
 	m_Graphics.Render(&sprite1, 1);
 	m_Graphics.Present();
@@ -331,47 +377,53 @@ void cApplication::Initialize_Game()
 {
 	m_Tiles.Create(&m_Graphics, 3);
 
-	m_Tiles.Load(0, L"Textures/terrainTiles.png", 32, 32);
-	m_Tiles.Load(1, L"Textures/perspective_walls.png", 16, 16);
+	m_Tiles.Load(0, L"Textures/seasons_tiles.png", 128, 64);
+	m_Tiles.Load(1, L"Textures/seasons_trees.png", 384, 256);
 	m_Tiles.Load(2, L"Textures/Warrior_Spritesheet.png", 32, 32);
+
+	//m_Tiles.SetScaleX(0, 2);
+	//m_Tiles.SetScaleY(0, 2);
+	
+	//m_Tiles.SetScaleX(2, 2.0f);
+	//m_Tiles.SetScaleY(2, 2.0f);
 
 	int layerTiles = 3 * 3;
 	SpriteData terrainSprites[3 * 3];
 
-	char layer0Info[256] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-							 1,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-							 1,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-							 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
-							 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
-							 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
-							 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 1,
-							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-							 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-							 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	char layer0Info[256] = {63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	};
 
-	char layer1Info[256] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	char layer1Info[256] = { 0, 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 0, 0,
+							 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 0,
+							-1,-1,-1,-1,-1,-1,-1,-1, 0,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1, 0, 0,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1, 0, 0,-1,-1,-1,-1,-1,-1,-1,
 							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-							-1,-1,-1,-1,-1,-1,-1, 5, 1, 6,-1,-1,-1,-1,-1,-1,
-							-1,-1,-1,-1,-1,-1,-1, 2, 0, 2,-1,-1,-1,-1,-1,-1,
-							-1,-1,-1,-1,-1,-1,-1, 2, 0, 2,-1,-1,-1,-1,-1,-1,
-							-1,-1,-1,-1,-1,-1,-1, 8,14, 7,-1,-1,-1,-1,-1,-1,
-							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 0,
+							 0, 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 0, 0,
 	};
 
 	// Map and it's Layers	//	//	//
@@ -380,8 +432,8 @@ void cApplication::Initialize_Game()
 	m_Map.AddLayer(1, layer1Info, 16, 16);
 	//	//	//	//	//	//	//	//	//
 
-	sprite1.Width = 128;// m_Texture.GetWidth() / 10;
-	sprite1.Height = 128;// m_Texture.GetHeight() / 10;
+	sprite1.Width = 32;// m_Texture.GetWidth() / 10;
+	sprite1.Height = 32;// m_Texture.GetHeight() / 10;
 	sprite1.X = 0;
 	sprite1.Y = 0;
 	sprite1.FlipHorizontal = false;

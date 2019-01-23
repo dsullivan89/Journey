@@ -409,12 +409,12 @@ void cGraphics::Render(SpriteData* sd, int count)
 
 		
 		
-		float nWidth = width / (maxX * 2);// -1.0f;     // n implies normalized to the [-1,1] range.
-		float nHeight = height / (maxY * 2);// -1.0f; // / float(m_Height);
-		float nPosX = x / (maxX * 2);
-		float nPosY = y / (maxY * 2);
-		float halfWidth = nWidth * 0.5f;
-		float halfHeight = nHeight * 0.5f;
+		float nWidth = (width / maxX);			// -1.0f;		// (width / (maxX * 2));// -1.0f;     // n implies normalized to the [-1,1] range.
+		float nHeight = (height / maxY);		// -1.0f;		//(height / (maxY * 2));// -1.0f; // / float(m_Height);
+		float nPosX = (x / maxX);
+		float nPosY = (y / maxY);
+		float halfWidth = nWidth / 2;
+		float halfHeight = nHeight / 2;
 
 		// Vertices
 		/*   
