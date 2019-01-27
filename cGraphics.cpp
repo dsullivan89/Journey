@@ -417,27 +417,39 @@ void cGraphics::Render(SpriteData* sd, int count)
 		float halfHeight = nHeight / 2;
 
 		// Vertices
-		/*   
+		/*   Origin is at bottom center
 			 A-----B
 			 |    /|
 			 |	 / |
 		     |  /  |
 		     | /   |
 			 |/    |
-			 C-----D
+			 C--*--D
 		*/
 
 		float Ax = nPosX - halfWidth;	// -(nWidth / 2);// -halfWidth;
-		float Ay = nPosY + halfHeight;	// +(nHeight / 2);//-halfHeight;
+		float Ay = nPosY + nHeight;	// +(nHeight / 2);//-halfHeight;
 
 		float Bx = nPosX + halfWidth;	// +(nWidth / 2);// - halfWidth;
-		float By = nPosY + halfHeight;	// +(nHeight / 2);// - halfHeight;
+		float By = nPosY + nHeight;	// +(nHeight / 2);// - halfHeight;
 
 		float Cx = nPosX - halfWidth;	// -(nWidth / 2);// - halfWidth;
-		float Cy = nPosY - halfHeight;	// -(nHeight / 2);// - halfHeight;
+		float Cy = nPosY;				// -halfHeight;	// -(nHeight / 2);// - halfHeight;
 
 		float Dx = nPosX + halfWidth;	// +(nWidth / 2);// - halfWidth;
-		float Dy = nPosY - halfHeight;	// -(nHeight / 2);// - halfHeight;
+		float Dy = nPosY;				// -(nHeight / 2);// - halfHeight;
+
+		//float Ax = nPosX - halfWidth;	// -(nWidth / 2);// -halfWidth;
+		//float Ay = nPosY + halfHeight;	// +(nHeight / 2);//-halfHeight;
+
+		//float Bx = nPosX + halfWidth;	// +(nWidth / 2);// - halfWidth;
+		//float By = nPosY + halfHeight;	// +(nHeight / 2);// - halfHeight;
+
+		//float Cx = nPosX - halfWidth;	// -(nWidth / 2);// - halfWidth;
+		//float Cy = nPosY - halfHeight;	// -(nHeight / 2);// - halfHeight;
+
+		//float Dx = nPosX + halfWidth;	// +(nWidth / 2);// - halfWidth;
+		//float Dy = nPosY - halfHeight;	// -(nHeight / 2);// - halfHeight;
 
 		float z = 0.0f;
 

@@ -14,14 +14,9 @@ class cMap
 {
 private:
 	char**    m_InfoLayers;
-	unsigned* m_Widths;
-	unsigned* m_Heights;
+	unsigned* m_LayerWidths;
+	unsigned* m_LayerHeights;
 	unsigned m_LayerCount;
-
-	cTiles m_Tiles;
-
-	long m_ObjectCount; // current number of objects that need to be drawn.
-	SpriteData m_Objects[1024];
 
 public:
 	void Create(int layerCount);

@@ -35,6 +35,16 @@ enum HumanoidAnimations
 	Die
 };
 
+struct sMouseInfo
+{
+	bool LeftBtnDown;
+	bool RightBtnDown;
+	int MouseX;
+	int MouseY;
+	sMouseInfo() : LeftBtnDown(false), RightBtnDown(false),
+		MouseX(0), MouseY(0) {}
+};
+
 class cApplication
 {
 private:
@@ -49,6 +59,11 @@ private:
 	bool m_bResizing;
 	bool m_bMinimized;
 	bool m_bMaximized;
+
+	float m_MapOffsetX;
+	float m_MapOffSetY;
+
+	sMouseInfo m_MouseState;
 
 	void OnEnterResize();
 	void OnExitResize();
@@ -70,6 +85,8 @@ private:
 	void OnKeyUp(int vkCode);
 
 	void Frame();
+	void Input();
+	void Render();
 
 	cGraphics m_Graphics;
 	cTiles m_Tiles;

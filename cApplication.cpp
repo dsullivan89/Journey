@@ -1,5 +1,7 @@
 #include "cApplication.h"
 
+#include<sstream>
+
 BOOL IsMouseTouchingTile(
 	long TileX, long TileY, // tile coordinates
 	long TileWidth, long TileHeight, // tile dimensions
@@ -15,7 +17,55 @@ BOOL IsMouseTouchingTile(
 	if (MouseY >= TileY + TileHeight) return FALSE;
 	// mouse must be touching tile
 	return TRUE; // return success
-}
+}
+
+// KILL ME WHEN DONE TESTING GetTileClicked()
+HWND g_WinHandle = NULL;
+bool g_EscapePressed = false;
+
+void GetTileClicked(int mouseX, int mouseY, int& gridX, int& gridY, int halfTileWidth, int halfTileHeight, int windowWidth, int windowHeight)
+{
+	RECT clientRect = RECT();
+	GetClientRect(g_WinHandle, &clientRect);
+
+	int clientWidth = clientRect.right;
+	int clientHeight = clientRect.bottom;
+
+	int x_trans = mouseX - (clientWidth / 2);
+	int y_trans = mouseY - (clientHeight / 2);
+
+	int tileWidth = halfTileWidth * 2;
+	int tileHeight = halfTileHeight * 2;
+	
+
+	int posX = x_trans / halfTileWidth;
+	int posY = y_trans / halfTileHeight;
+
+	gridX = posX - posY;
+	gridY = posX + posY;
+
+	//gridX = (x_trans / halfTileWidth + y_trans / halfTileHeight) / 2;
+	//gridY = (y_trans / halfTileHeight - (x_trans / halfTileWidth)) / 2;
+
+	std::stringstream gridPosText;
+	gridPosText << "Grid X: " << gridX << " Grid Y: " << gridY;
+
+	std::stringstream mousePosText;
+	mousePosText << "Mouse X: " << mouseX << " Mouse Y: " << mouseY;
+
+	std::stringstream transformedMousePosText;
+	transformedMousePosText << "Transformed Mouse X: " << x_trans << " Y: " << -y_trans;
+
+	if(!g_EscapePressed)
+		SetWindowText(g_WinHandle, gridPosText.str().c_str());
+
+	//gridX = x_trans / halfTileWidth;
+	//gridY = y_trans / halfTileHeight;
+	//int x_norm = mouseX / (windowWidth / 2);
+	//int y_norm = mouseY / (windowHeight / 2);
+	return;
+}
+
 float g_Scale = 1;
 
 
@@ -58,6 +108,8 @@ bool cApplication::Initialize(HINSTANCE hInstance, int ShowWnd, int width, int h
 		this    //used for an MDI client window
 	);
 
+	g_WinHandle = m_hWnd;
+
 	if (!m_hWnd)    //Make sure our window has been created
 	{
 		//If not, display error
@@ -75,8 +127,14 @@ bool cApplication::Initialize(HINSTANCE hInstance, int ShowWnd, int width, int h
 	ShowWindow(m_hWnd, ShowWnd);    //Shows our window
 
 	bool result;
+
+	RECT clientRect = RECT();
+	GetClientRect(m_hWnd, &clientRect);
+
+	int clientWidth = clientRect.right;
+	int clientHeight = clientRect.bottom;
 	
-	result = m_Graphics.Initialize(m_hWnd, width, height, true);
+	result = m_Graphics.Initialize(m_hWnd, clientWidth, clientHeight, true);
 
 	if (!result)
 		return false;
@@ -149,14 +207,22 @@ void cApplication::OnMaximize(bool isMaximized)
 
 void cApplication::OnMouseMove(int posX, int posY)
 {
+	m_MouseState.MouseX = posX;// +posX / 2;
+	m_MouseState.MouseY = posY;// +posY / 2;
 }
 
 void cApplication::OnMouseLeftDown(int posX, int posY)
 {
+	m_MouseState.MouseX = posX;// +posX / 2;
+	m_MouseState.MouseY = posY;// +posY / 2;
+	m_MouseState.LeftBtnDown = true;
 }
 
 void cApplication::OnMouseLeftUp(int posX, int posY)
 {
+	m_MouseState.MouseX = posX;// +posX / 2;
+	m_MouseState.MouseY = posY;// +posY / 2;
+	m_MouseState.LeftBtnDown = false;
 }
 
 void cApplication::OnMouseLeftDoubleClick(int posX, int posY)
@@ -165,10 +231,16 @@ void cApplication::OnMouseLeftDoubleClick(int posX, int posY)
 
 void cApplication::OnMouseRightDown(int posX, int posY)
 {
+	m_MouseState.MouseX = posX;// +posX / 2;
+	m_MouseState.MouseY = posY;// +posY / 2;
+	m_MouseState.RightBtnDown = true;
 }
 
 void cApplication::OnMouseRightUp(int posX, int posY)
 {
+	m_MouseState.MouseX = posX;// +posX / 2;
+	m_MouseState.MouseY = posY;// +posY / 2;
+	m_MouseState.RightBtnDown = false;
 }
 
 void cApplication::OnMouseRightDoubleClick(int posX, int posY)
@@ -178,15 +250,21 @@ void cApplication::OnMouseRightDoubleClick(int posX, int posY)
 void cApplication::OnKeyDown(int vkCode)
 {
 	if (vkCode == VK_ESCAPE) {
+		g_EscapePressed = true;
 		if (MessageBox(0, "Are you sure you want to exit?",
 			"Really?", MB_YESNO | MB_ICONQUESTION) == IDYES)
 
+		{
+			DestroyWindow(m_hWnd);
+		}
+		else
+			g_EscapePressed = false;
 			////Release the windows allocated memory  
 			//if (app != nullptr)
 			//{
 			//	app->m_isRunning = false;
 			//}
-			DestroyWindow(m_hWnd);
+			
 	}
 	
 	if (vkCode == 0x57) // W
@@ -261,20 +339,32 @@ void cApplication::OnKeyUp(int vkCode)
 
 void cApplication::Frame()
 {
+	Input();
+	Render();
+}
+
+void cApplication::Input()
+{
+	if (m_MouseState.LeftBtnDown)
+	{
+		
+	}
+}
+
+void cApplication::Render()
+{
 	float red[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
 	float white[4] = { 1.0f, 1.0f, 1.0f, 0.0f };
 	float black[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	m_Graphics.Clear(black);
 
-	
-
 	// rendering terrain
 	int _layers = m_Map.GetLayerCount();
 	for (int layer = 0; layer < _layers; layer++)
 	{
 		float _maxMapWidth = m_Map.GetLayerWidth(0) * m_Tiles.GetWidth(0);
-		float _maxMapHeight = m_Map.GetLayerHeight(0) * m_Tiles.GetHeight(0);
+		float _maxMapHeight = m_Map.GetLayerHeight(0) * m_Tiles.GetHeight(0) * m_Tiles.GetScaleY(0);
 
 		int _mapWidth = m_Map.GetLayerWidth(layer);
 		int _mapHeight = m_Map.GetLayerHeight(layer);
@@ -282,24 +372,17 @@ void cApplication::Frame()
 
 		int xInterval = m_Tiles.GetWidth(0);
 		int yInterval = m_Tiles.GetHeight(0);
+		int halfX = xInterval / 2;
+		int halfY = yInterval / 2;
 		float xScale = m_Tiles.GetScaleX(0);
 		float yScale = m_Tiles.GetScaleY(0);
 		float adjXInt = xInterval * xScale;
 		float adjYInt = yInterval * yScale;
 
-		float fineMapHeight = m_Map.GetLayerHeight(0) * m_Tiles.GetHeight(0) * m_Tiles.GetScaleY(0);
-
 		int _tileWidth = m_Tiles.GetWidth(layer);
 		int _tileHeight = m_Tiles.GetHeight(layer);
 		float _tileScaleX = m_Tiles.GetScaleX(layer);
 		float _tileScaleY = m_Tiles.GetScaleY(layer);
-		float _nWidth = _tileWidth * _tileScaleX;
-		float _nHeight = _tileHeight * _tileScaleY;
-		int _emptySpaces = 0;
-		int fineX = (_tileWidth*_tileScaleX) * _mapWidth;
-		int fineY = (_tileHeight*_tileScaleY) * _mapHeight;
-		//float xOffset = fineX % _tileWidth;
-		//float yOffset = fineY % _tileHeight;
 
 		char* _layerInfo = new char[_area];
 		SpriteData* terrainSprites = new SpriteData[_area];
@@ -314,34 +397,37 @@ void cApplication::Frame()
 
 				if (_layerInfo[i] != -1)
 				{
+
 					// Smooth scrolling goes here.
 					DRECT rect = m_Tiles.GetTile(layer, _layerInfo[i]);
 
-					// this is the width and height of the map layer
-					// measured in pixels.
-
-					
+					// adj*Int = adjusted intervals. 
 					float ScreenX = (row - column) * (adjXInt / 2);
-					float ScreenY = (row + column) * (adjYInt / 2) - (fineMapHeight / 2);
+					float ScreenY = (row + column) * (adjYInt / 2);// -(_maxMapHeight / 2);
 
-					// debugging
-					//float ScreenX = (layer == 1) ? (column - row) * (adjXInt / 2) * g_Scale : (row - column) * (adjXInt / 2);
-					//float ScreenY = (layer == 1) ? (column + row) * (adjYInt / 2) * g_Scale - (fineMapHeight / 2) : (row + column) * (adjYInt / 2) - (fineMapHeight / 2);
-
-					//float ScreenX = (row * (_tileWidth*_tileScaleX / 2)) - (column * (_tileWidth*_tileScaleX / 2));// -fineX / 2;
-					//float ScreenY = (row * (_tileHeight*_tileScaleY / 2)) + (column * (_tileHeight*_tileScaleY / 2))-fineY / 2;
-
-					//float ScreenX = float(row * (_tileWidth*_tileScaleX)) - float(fineX*_tileScaleX / 2);
-					//float ScreenY = float(column * (_tileHeight*_tileScaleY)) - float(fineY*_tileScaleY / 2);
 					
+
 					terrainSprites[i].X = ScreenX;
 					terrainSprites[i].Y = ScreenY;
-					terrainSprites[i].Width = _tileWidth *_tileScaleX;
-					terrainSprites[i].Height = _tileHeight *_tileScaleY;
+					terrainSprites[i].Width = _tileWidth * _tileScaleX;
+					terrainSprites[i].Height = _tileHeight * _tileScaleY;
 					terrainSprites[i].Rect = rect;
 					terrainSprites[i].FlipHorizontal = false;
 					terrainSprites[i].FlipVertical = false;
 					terrainSprites[i].ClipPixels = false;
+
+
+					int x = -1;
+					int y = -1;
+					GetTileClicked(m_MouseState.MouseX, m_MouseState.MouseY, x, y, adjXInt / 2, adjYInt / 2, m_WindowWidth, m_WindowHeight);
+
+
+					if (m_MouseState.LeftBtnDown)
+					{
+						
+						m_MouseState.LeftBtnDown = false;
+					}
+						
 				}
 			}
 		}
@@ -362,7 +448,7 @@ void cApplication::Frame()
 	float _tileHeight = m_Tiles.GetHeight(2);
 	float _tileScaleX = m_Tiles.GetScaleX(2);
 	float _tileScaleY = m_Tiles.GetScaleY(2);
-	
+
 	float _adjTileSizeX = _tileWidth * _tileScaleX;
 	float _adjTileSizeY = _tileHeight * _tileScaleY;
 
@@ -408,8 +494,8 @@ void cApplication::Initialize_Game()
 							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	};
 
-	char layer1Info[256] = { 0, 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 0, 0,
-							 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 0,
+	char layer1Info[256] = { 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 0,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 							-1,-1,-1,-1,-1,-1,-1,-1, 0,-1,-1,-1,-1,-1,-1,-1,
 							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -422,8 +508,8 @@ void cApplication::Initialize_Game()
 							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-							 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 0,
-							 0, 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 0, 0,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+							-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 	};
 
 	// Map and it's Layers	//	//	//
