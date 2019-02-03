@@ -2,51 +2,15 @@
 
 #include<sstream>
 
-BOOL IsMouseTouchingTile(
-	long TileX, long TileY, // tile coordinates
-	long TileWidth, long TileHeight, // tile dimensions
-	long MouseX, long MouseY) // mouse coordinates
+void GetTileClicked(int mouseX, int mouseY, float& gridX, float& gridY, int halfTileWidth, int halfTileHeight)
 {
-	// check if mouse too far left from tile
-	if (MouseX < TileX) return FALSE;
-	// check if mouse too far right from tile
-	if (MouseX >= TileX + TileWidth) return FALSE;
-	// check if mouse too far above tile
-	if (MouseY < TileY) return FALSE;
-	// check if mouse too far below tile
-	if (MouseY >= TileY + TileHeight) return FALSE;
-	// mouse must be touching tile
-	return TRUE; // return success
-}
+	// set to negative because I was getting all negetive numbers
+	// for otherwise valid results...
+	gridX = - ((mouseY + mouseX / 2) / halfTileHeight);
+	gridY = - ((mouseY - mouseX / 2) / halfTileHeight);
 
-// KILL ME WHEN DONE TESTING GetTileClicked()
-HWND g_WinHandle = NULL;
-bool g_EscapePressed = false;
 
-void GetTileClicked(int mouseX, int mouseY, int& gridX, int& gridY, int halfTileWidth, int halfTileHeight, int windowWidth, int windowHeight)
-{
-	RECT clientRect = RECT();
-	GetClientRect(g_WinHandle, &clientRect);
-
-	int clientWidth = clientRect.right;
-	int clientHeight = clientRect.bottom;
-
-	int x_trans = mouseX - (clientWidth / 2);
-	int y_trans = mouseY - (clientHeight / 2);
-
-	int tileWidth = halfTileWidth * 2;
-	int tileHeight = halfTileHeight * 2;
-	
-
-	int posX = x_trans / halfTileWidth;
-	int posY = y_trans / halfTileHeight;
-
-	gridX = posX - posY;
-	gridY = posX + posY;
-
-	//gridX = (x_trans / halfTileWidth + y_trans / halfTileHeight) / 2;
-	//gridY = (y_trans / halfTileHeight - (x_trans / halfTileWidth)) / 2;
-
+	// I can't kill these statements. they are my babies! /////
 	std::stringstream gridPosText;
 	gridPosText << "Grid X: " << gridX << " Grid Y: " << gridY;
 
@@ -54,20 +18,11 @@ void GetTileClicked(int mouseX, int mouseY, int& gridX, int& gridY, int halfTile
 	mousePosText << "Mouse X: " << mouseX << " Mouse Y: " << mouseY;
 
 	std::stringstream transformedMousePosText;
-	transformedMousePosText << "Transformed Mouse X: " << x_trans << " Y: " << -y_trans;
+	transformedMousePosText << "Transformed Mouse X: " << mouseX << " Y: " << mouseY;
+	///////////
 
-	if(!g_EscapePressed)
-		SetWindowText(g_WinHandle, gridPosText.str().c_str());
-
-	//gridX = x_trans / halfTileWidth;
-	//gridY = y_trans / halfTileHeight;
-	//int x_norm = mouseX / (windowWidth / 2);
-	//int y_norm = mouseY / (windowHeight / 2);
 	return;
 }
-
-float g_Scale = 1;
-
 
 bool cApplication::Initialize(HINSTANCE hInstance, int ShowWnd, int width, int height, bool windowed)
 {
@@ -107,8 +62,6 @@ bool cApplication::Initialize(HINSTANCE hInstance, int ShowWnd, int width, int h
 		hInstance,    //Specifies instance of current program
 		this    //used for an MDI client window
 	);
-
-	g_WinHandle = m_hWnd;
 
 	if (!m_hWnd)    //Make sure our window has been created
 	{
@@ -207,21 +160,41 @@ void cApplication::OnMaximize(bool isMaximized)
 
 void cApplication::OnMouseMove(int posX, int posY)
 {
-	m_MouseState.MouseX = posX;// +posX / 2;
-	m_MouseState.MouseY = posY;// +posY / 2;
+	RECT clientRect = RECT();
+	GetClientRect(m_hWnd, &clientRect);
+
+	int clientWidth = clientRect.right;
+	int clientHeight = clientRect.bottom;
+
+	m_MouseState.MouseX = posX - (clientWidth / 2);
+	m_MouseState.MouseY = posY - (clientHeight / 2);
 }
 
 void cApplication::OnMouseLeftDown(int posX, int posY)
 {
-	m_MouseState.MouseX = posX;// +posX / 2;
-	m_MouseState.MouseY = posY;// +posY / 2;
+	RECT clientRect = RECT();
+	GetClientRect(m_hWnd, &clientRect);
+
+	int clientWidth = clientRect.right;
+	int clientHeight = clientRect.bottom;
+
+	m_MouseState.MouseX = posX - (clientWidth / 2);
+	m_MouseState.MouseY = posY - (clientHeight / 2);
+
 	m_MouseState.LeftBtnDown = true;
 }
 
 void cApplication::OnMouseLeftUp(int posX, int posY)
 {
-	m_MouseState.MouseX = posX;// +posX / 2;
-	m_MouseState.MouseY = posY;// +posY / 2;
+	RECT clientRect = RECT();
+	GetClientRect(m_hWnd, &clientRect);
+
+	int clientWidth = clientRect.right;
+	int clientHeight = clientRect.bottom;
+
+	m_MouseState.MouseX = posX - (clientWidth / 2);
+	m_MouseState.MouseY = posY - (clientHeight / 2);
+
 	m_MouseState.LeftBtnDown = false;
 }
 
@@ -231,15 +204,29 @@ void cApplication::OnMouseLeftDoubleClick(int posX, int posY)
 
 void cApplication::OnMouseRightDown(int posX, int posY)
 {
-	m_MouseState.MouseX = posX;// +posX / 2;
-	m_MouseState.MouseY = posY;// +posY / 2;
+	RECT clientRect = RECT();
+	GetClientRect(m_hWnd, &clientRect);
+
+	int clientWidth = clientRect.right;
+	int clientHeight = clientRect.bottom;
+
+	m_MouseState.MouseX = posX - (clientWidth / 2);
+	m_MouseState.MouseY = posY - (clientHeight / 2);
+
 	m_MouseState.RightBtnDown = true;
 }
 
 void cApplication::OnMouseRightUp(int posX, int posY)
 {
-	m_MouseState.MouseX = posX;// +posX / 2;
-	m_MouseState.MouseY = posY;// +posY / 2;
+	RECT clientRect = RECT();
+	GetClientRect(m_hWnd, &clientRect);
+
+	int clientWidth = clientRect.right;
+	int clientHeight = clientRect.bottom;
+
+	m_MouseState.MouseX = posX - (clientWidth / 2);
+	m_MouseState.MouseY = posY - (clientHeight / 2);
+
 	m_MouseState.RightBtnDown = false;
 }
 
@@ -250,21 +237,12 @@ void cApplication::OnMouseRightDoubleClick(int posX, int posY)
 void cApplication::OnKeyDown(int vkCode)
 {
 	if (vkCode == VK_ESCAPE) {
-		g_EscapePressed = true;
+		
 		if (MessageBox(0, "Are you sure you want to exit?",
 			"Really?", MB_YESNO | MB_ICONQUESTION) == IDYES)
-
 		{
 			DestroyWindow(m_hWnd);
-		}
-		else
-			g_EscapePressed = false;
-			////Release the windows allocated memory  
-			//if (app != nullptr)
-			//{
-			//	app->m_isRunning = false;
-			//}
-			
+		}	
 	}
 	
 	if (vkCode == 0x57) // W
@@ -315,21 +293,25 @@ void cApplication::OnKeyDown(int vkCode)
 		sprite1.FlipHorizontal = false;
 	}
 
-	if (vkCode == 0x31)
+	if (vkCode == 0x31) // 1
 	{
 		m_Graphics.RSSolidMode();
 	}
-	if (vkCode == 0x32)
+	if (vkCode == 0x32) // 2
 	{
 		m_Graphics.RSWireFrameMode();
 	}
 
-	float scale = 0.1;
-
 	if (vkCode == VK_UP)
-		g_Scale += scale;
+	{
+
+	}
+
 	if (vkCode == VK_DOWN)
-		g_Scale -= scale;
+	{
+
+	}
+		
 		
 }
 
@@ -345,9 +327,17 @@ void cApplication::Frame()
 
 void cApplication::Input()
 {
-	if (m_MouseState.LeftBtnDown)
+	static bool handled = false;
+
+	if (m_MouseState.LeftBtnDown && !handled)
 	{
-		
+		float mapX = 0;
+		float mapY = 0;
+		GetTileClicked(m_MouseState.MouseX, m_MouseState.MouseY, mapX, mapY, 64, 32);
+		std::stringstream mapPosText;
+		mapPosText << "X: " << mapX << " Y: " << mapY;
+		MessageBox(m_hWnd, mapPosText.str().c_str(), "Map Position:", MB_OK);
+		handled = true;
 	}
 }
 
@@ -363,7 +353,7 @@ void cApplication::Render()
 	int _layers = m_Map.GetLayerCount();
 	for (int layer = 0; layer < _layers; layer++)
 	{
-		float _maxMapWidth = m_Map.GetLayerWidth(0) * m_Tiles.GetWidth(0);
+		float _maxMapWidth = (float)m_Map.GetLayerWidth(0) * (float)m_Tiles.GetWidth(0);
 		float _maxMapHeight = m_Map.GetLayerHeight(0) * m_Tiles.GetHeight(0) * m_Tiles.GetScaleY(0);
 
 		int _mapWidth = m_Map.GetLayerWidth(layer);
@@ -414,20 +404,7 @@ void cApplication::Render()
 					terrainSprites[i].Rect = rect;
 					terrainSprites[i].FlipHorizontal = false;
 					terrainSprites[i].FlipVertical = false;
-					terrainSprites[i].ClipPixels = false;
-
-
-					int x = -1;
-					int y = -1;
-					GetTileClicked(m_MouseState.MouseX, m_MouseState.MouseY, x, y, adjXInt / 2, adjYInt / 2, m_WindowWidth, m_WindowHeight);
-
-
-					if (m_MouseState.LeftBtnDown)
-					{
-						
-						m_MouseState.LeftBtnDown = false;
-					}
-						
+					terrainSprites[i].ClipPixels = false;						
 				}
 			}
 		}
@@ -476,7 +453,7 @@ void cApplication::Initialize_Game()
 	int layerTiles = 3 * 3;
 	SpriteData terrainSprites[3 * 3];
 
-	char layer0Info[256] = {63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	char layer0Info[256] = {63,63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 							 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -668,66 +645,36 @@ LRESULT CALLBACK cApplication::WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LP
 	}
 	case WM_LBUTTONDOWN:
 	{
-		/*Event sizeEvent;
-		sizeEvent.id = EventID::LeftMouseDown;
-		sizeEvent.x = GET_X_LPARAM(lParam);
-		sizeEvent.y = GET_Y_LPARAM(lParam);
-		g_Events.push(sizeEvent);*/
 		if (app != nullptr)
 			app->OnMouseLeftDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 	}
 	case WM_RBUTTONDOWN:
 	{
-		/*Event sizeEvent;
-		sizeEvent.id = EventID::RightMouseDown;
-		sizeEvent.x = GET_X_LPARAM(lParam);
-		sizeEvent.y = GET_Y_LPARAM(lParam);
-		g_Events.push(sizeEvent);*/
 		if (app != nullptr)
 			app->OnMouseRightDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 	}
 	case WM_LBUTTONUP:
 	{
-		/*Event sizeEvent;
-		sizeEvent.id = EventID::LeftMouseUp;
-		sizeEvent.x = GET_X_LPARAM(lParam);
-		sizeEvent.y = GET_Y_LPARAM(lParam);
-		g_Events.push(sizeEvent);*/
 		if (app != nullptr)
 			app->OnMouseLeftUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 	}
 	case WM_RBUTTONUP:
 	{
-		/*Event sizeEvent;
-		sizeEvent.id = EventID::RightMouseUp;
-		sizeEvent.x = GET_X_LPARAM(lParam);
-		sizeEvent.y = GET_Y_LPARAM(lParam);
-		g_Events.push(sizeEvent);*/
 		if (app != nullptr)
 			app->OnMouseRightUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 	}
 	case WM_LBUTTONDBLCLK:
 	{
-		/*Event sizeEvent;
-		sizeEvent.id = EventID::LeftMouseDoubleClick;
-		sizeEvent.x = GET_X_LPARAM(lParam);
-		sizeEvent.y = GET_Y_LPARAM(lParam);
-		g_Events.push(sizeEvent);*/
 		if (app != nullptr)
 			app->OnMouseLeftDoubleClick(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 	}
 	case WM_RBUTTONDBLCLK:
 	{
-		/*Event sizeEvent;
-		sizeEvent.id = EventID::RightMouseDoubleClick;
-		sizeEvent.x = GET_X_LPARAM(lParam);
-		sizeEvent.y = GET_Y_LPARAM(lParam);
-		g_Events.push(sizeEvent);*/
 		if (app != nullptr)
 			app->OnMouseRightDoubleClick(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
